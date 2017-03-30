@@ -1,35 +1,25 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'main_ui.ui'
-#
-# Created by: PyQt5 UI code generator 5.8.1
-#
-# WARNING! All changes made in this file will be lost!
 
 import sys
 import datetime
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 import numpy as np 
 import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 
+#http://stackoverflow.com/questions/8653092/using-matplotlib-axes-with-ginput-and-imshow
 class MyMplCanvas(FigureCanvas):
-    """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
-    def __init__(self, data, column_name, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-
+    def __init__(self, parent=None, width=5, height=4, dpi=100, data=None, column_name=None):
+        self.fig, self.axes = plt.subplots(figsize=(width, height), dpi=dpi)
         self.data = data
         self.column_name = column_name
         self.compute_initial_figure()
 
-        FigureCanvas.__init__(self, fig)
+        FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
 
         FigureCanvas.setSizePolicy(self,
@@ -42,6 +32,10 @@ class MyMplCanvas(FigureCanvas):
 
 class HeatMapMplCanvas (MyMplCanvas):
     
+    def __init__(self, *args, **kwargs):
+        MyMplCanvas.__init__(self, *args, **kwargs)
+    
+    # https://plot.ly/python/heatmaps-contours-and-2dhistograms-tutorial/
     def compute_initial_figure(self):
         dt = self.data
         column_name = self.column_name
@@ -50,16 +44,15 @@ class HeatMapMplCanvas (MyMplCanvas):
         z_day = dt[column_name].reset_index(drop=True)
         
         the_months, the_days, Z_dayXmonth = self.dates_to_dayXmonth(df_in, z_day)
-        # the_months = x-axis, the_days = y-axis, Z_dayXmonth = data
-        
-        # XAxistitle='Months in sample'
-        # YAxistitle='Days of the month', # y-axis title
         
         extent = [the_months[0], the_months[-1], the_days[0], the_days[-1]]
         
+        self.axes.clear()
         self.axes.set_title(column_name)
-        self.axes.imshow(Z_dayXmonth, interpolation='none', extent=extent, origin='low', aspect=0.25)
-        #self.axes.colorbar()
+        
+        #http://matplotlib.org/examples/pylab_examples/colorbar_tick_labelling_demo.html
+        cax = self.axes.imshow(Z_dayXmonth, interpolation='none', extent=extent, origin='low', aspect=0.25)
+        cbar = self.fig.colorbar(cax)
         
     def dates_to_dayXmonth(self, df_in, z_in):
         
@@ -105,16 +98,20 @@ class HeatMapMplCanvas (MyMplCanvas):
 class Ui_Main (QtWidgets.QMainWindow):
     
     def __init__(self, parent=None):
-        super(Ui_Main, self).__init__()
-        self.setupUi(self)
-        self.plot_Heatmap()
+        QtWidgets.QMainWindow.__init__(self)
+        self.setupUi()
+        self.df_day = self.df_to_day()
+        self.retranslateUi()
+        self.plot_Heatmap(column_name=self.listWidget.item(1).text())
         
-    def setupUi(self, Form):
-        Form.setObjectName("Form")
-        Form.resize(571, 522)
-        self.listWidget = QtWidgets.QListWidget(Form)
+        
+    def setupUi(self):
+        self.setObjectName("Form")
+        self.setFixedSize(571, 522)
+        self.listWidget = QtWidgets.QListWidget(self)
         self.listWidget.setGeometry(QtCore.QRect(10, 70, 131, 351))
         self.listWidget.setObjectName("listWidget")
+        self.listWidget.itemClicked.connect(self.itemClickedEvent)
         item = QtWidgets.QListWidgetItem()
         self.listWidget.addItem(item)
         item = QtWidgets.QListWidgetItem()
@@ -123,61 +120,57 @@ class Ui_Main (QtWidgets.QMainWindow):
         self.listWidget.addItem(item)
         item = QtWidgets.QListWidgetItem()
         self.listWidget.addItem(item)
-        self.radioButton = QtWidgets.QRadioButton(Form)
+        self.radioButton = QtWidgets.QRadioButton(self)
         self.radioButton.setGeometry(QtCore.QRect(20, 430, 121, 16))
         self.radioButton.setObjectName("radioButton")
-        self.radioButton_2 = QtWidgets.QRadioButton(Form)
+        self.radioButton_2 = QtWidgets.QRadioButton(self)
         self.radioButton_2.setGeometry(QtCore.QRect(20, 450, 90, 16))
         self.radioButton_2.setObjectName("radioButton_2")
-        self.radioButton_3 = QtWidgets.QRadioButton(Form)
+        self.radioButton_3 = QtWidgets.QRadioButton(self)
         self.radioButton_3.setGeometry(QtCore.QRect(20, 470, 90, 16))
         self.radioButton_3.setObjectName("radioButton_3")
-        self.radioButton_4 = QtWidgets.QRadioButton(Form)
+        self.radioButton_4 = QtWidgets.QRadioButton(self)
         self.radioButton_4.setGeometry(QtCore.QRect(20, 490, 101, 16))
         self.radioButton_4.setObjectName("radioButton_4")
-        self.frame = QtWidgets.QFrame(Form)
+        self.frame = QtWidgets.QFrame(self)
         self.frame.setGeometry(QtCore.QRect(160, 70, 421, 441))
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
-        self.textEdit = QtWidgets.QTextEdit(Form)
+        self.textEdit = QtWidgets.QTextEdit(self)
         self.textEdit.setGeometry(QtCore.QRect(10, 10, 370, 24))
         self.textEdit.setObjectName("textEdit")
-        self.pushButton = QtWidgets.QPushButton(Form)
+        self.pushButton = QtWidgets.QPushButton(self)
         self.pushButton.setGeometry(QtCore.QRect(390, 9, 75, 26))
         self.pushButton.setObjectName("pushButton")
-        self.pushButton_2 = QtWidgets.QPushButton(Form)
+        self.pushButton_2 = QtWidgets.QPushButton(self)
         self.pushButton_2.setGeometry(QtCore.QRect(470, 9, 90, 26))
         self.pushButton_2.setObjectName("pushButton_2")
+        self.main_widget = QtWidgets.QWidget(self)
+        self.main_widget.setGeometry(QtCore.QRect(150, 65, 400, 440))
+        self.qvBoxLayout = QtWidgets.QVBoxLayout(self.main_widget)
+        
+        QtCore.QMetaObject.connectSlotsByName(self)
 
-        self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
-
-    def retranslateUi(self, Form):
+    def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "BSI_Lab"))
+        self.setWindowTitle(_translate("Form", "BSI_Lab"))
         __sortingEnabled = self.listWidget.isSortingEnabled()
         self.listWidget.setSortingEnabled(False)
-        item = self.listWidget.item(0)
-        item.setText(_translate("Form", "textlist1"))
-        item = self.listWidget.item(1)
-        item.setText(_translate("Form", "textlist2"))
-        item = self.listWidget.item(2)
-        item.setText(_translate("Form", "textlist3"))
-        item = self.listWidget.item(3)
-        item.setText(_translate("Form", "textlist4")) 
+        for i in range(len(self.df_day.columns)):
+            item = self.listWidget.item(i)
+            item.setText(_translate("Form", self.df_day.columns[i]))
         self.listWidget.setSortingEnabled(__sortingEnabled)
         self.radioButton.setText(_translate("Form", "Heatmap(default)"))
         self.radioButton_2.setText(_translate("Form", "Energy"))
         self.radioButton_3.setText(_translate("Form", "Load Profile"))
         self.radioButton_4.setText(_translate("Form", "Load Duration"))
-        self.textEdit.setHtml(_translate("Form", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'Gulim\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">File Path</p></body></html>"))
+        self.textEdit.setHtml(_translate("Form", "File Path"))
         self.pushButton.setText(_translate("Form", "Select"))
         self.pushButton_2.setText(_translate("Form", "Run Analysis"))
+        
+    def itemClickedEvent(self, item):
+        self.plot_Heatmap(column_name=item.text())
         
     # http://jsideas.net/python/2015/08/30/daily_to_weekly.html
     def df_to_day(self):
@@ -194,45 +187,17 @@ class Ui_Main (QtWidgets.QMainWindow):
         
         return pd.concat(daily_df, axis=1)
 
-    # https://plot.ly/python/heatmaps-contours-and-2dhistograms-tutorial/   
     
-    def plot_Heatmap(self):
-        width = 650  # plot width 
-        height = 800  # plot height
+    def plot_Heatmap(self, column_name):
         
-        df_day = self.df_to_day()
+        hc = HeatMapMplCanvas(self.main_widget, width=5, height=4, dpi=100, data=self.df_day, column_name=column_name)
         
-        self.main_widget = QtWidgets.QWidget(self)
-
-        l = QtWidgets.QVBoxLayout(self.main_widget)
-        hc = HeatMapMplCanvas(df_day, df_day.columns[1])
-        l.addWidget(hc)
-        
-        # Make heatmap object
-        """
-        for i in range(len(df_day.columns)):
-            column_name = df_day.columns[i]
+        #http://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt
+        for i in reversed( range(self.qvBoxLayout.count()) ): 
+            self.qvBoxLayout.itemAt(i).widget().deleteLater()
             
-            df_in = df_day[column_name].reset_index()
-            z_day = df_day[column_name].reset_index(drop=True)
-            
-            the_months, the_days, Z_dayXmonth = self.dates_to_dayXmonth(df_in, z_day)
-            # the_months = x-axis, the_days = y-axis, Z_dayXmonth = data
-            
-            # XAxistitle='Months in sample'
-            # YAxistitle='Days of the month', # y-axis title
-            
-            extent = [the_months[0], the_months[-1], the_days[0], the_days[-1]]
-            
-            plt.figure(i + 1)
-            plt.title(column_name)
-            plt.imshow(Z_dayXmonth, interpolation='none', extent=extent, origin='low', aspect=0.25)
-            plt.colorbar()
-            
-        plt.show()
-        print("plot done")
-        """
-        
+        self.qvBoxLayout.addWidget(hc)
+                
             
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
