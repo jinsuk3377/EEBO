@@ -102,8 +102,7 @@ class Ui_Main (QtWidgets.QMainWindow):
         self.setupUi()
         self.df_day = self.df_to_day()
         self.retranslateUi()
-        self.plot_Heatmap(column_name=self.listWidget.item(1).text())
-        
+        self.setDefaultPlotting()
         
     def setupUi(self):
         self.setObjectName("Form")
@@ -165,12 +164,17 @@ class Ui_Main (QtWidgets.QMainWindow):
         self.radioButton_2.setText(_translate("Form", "Energy"))
         self.radioButton_3.setText(_translate("Form", "Load Profile"))
         self.radioButton_4.setText(_translate("Form", "Load Duration"))
+        
         self.textEdit.setHtml(_translate("Form", "File Path"))
         self.pushButton.setText(_translate("Form", "Select"))
         self.pushButton_2.setText(_translate("Form", "Run Analysis"))
         
     def itemClickedEvent(self, item):
         self.plot_Heatmap(column_name=item.text())
+        
+    def setDefaultPlotting(self):
+        self.radioButton.setChecked(True)
+        self.plot_Heatmap(column_name=self.listWidget.item(1).text())
         
     # http://jsideas.net/python/2015/08/30/daily_to_weekly.html
     def df_to_day(self):
