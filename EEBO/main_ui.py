@@ -1,10 +1,11 @@
 
 import set_date
 import read_data
-
-import plot.plot_timestamp
+import gen_plot
+#import plot.plot_timestamp
 
 import sys
+import pandas as pd
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -15,17 +16,15 @@ class Ui_Main (QtWidgets.QMainWindow):
         self.setupUi()
         self.menuBarUi()
         self.retranslateUi()
-        read_data()
-        set_date()
-        self.plot()
+        
         #self.setDefaultPlotting()
-        #self.df_day = self.df_to_day()
-    
+    '''
     def setDefaultPlotting(self):
         self.radioButton.setChecked(True)
         self.plot_Heatmap(column_name=self.listWidget.item(1).text())
-        
-        
+    '''
+    def itemClickedEvent(self, item):
+        self.plot_Heatmap(column_name=item.text())
         
     def setupUi(self):
         self.setObjectName("Form")
@@ -110,7 +109,7 @@ class Ui_Main (QtWidgets.QMainWindow):
         mainMenu = self.menuBar()
         self.importAction = QtWidgets.QAction("&Import File", self)
         self.importAction.setShortcut('Ctrl+I')
-        self.importAction.triggered.connect(importFile)
+        #self.importAction.triggered.connect(importFile)
         self.exitAction = QtWidgets.QAction('&Exit', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.triggered.connect(QtWidgets.qApp.quit)
@@ -128,13 +127,18 @@ class Ui_Main (QtWidgets.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def retranslateUi(self):
+        
+        df_day=set_date.df_to_day()
+
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("Form", "EEBO"))
         __sortingEnabled = self.listWidget.isSortingEnabled()
         self.listWidget.setSortingEnabled(False)
-        for i in range(len(self.df_day.columns)):
+        #for i in range(len(self.df_day.columns)):
+        for i in range(len(df_day.columns)):
             item = self.listWidget.item(i)
-            item.setText(_translate("Form", self.df_day.columns[i]))
+            item.setText(_translate("Form", df_day.columns[i]))
+            #item.setText(_translate("Form", self.df_day.columns[i]))
         self.listWidget.setSortingEnabled(__sortingEnabled)
         self.groupBox.setTitle(_translate("Form", "Graph"))
         self.radioButton.setText(_translate("Form", "Heatmap(default)"))
@@ -151,16 +155,11 @@ class Ui_Main (QtWidgets.QMainWindow):
         self.radioButton_11.setText(_translate("Form", "Month"))
         
         self.textEdit.setHtml(_translate("Form", "File Name"))
-        
-    def itemClickedEvent(self, item):
-        self.plot_Heatmap(column_name=item.text())
 
-    
     def radioButtonClicked(self):
-        enum
+        #enum
         if self.radioButton_5.isChecked():
-            self.df_to_min10()
-            return int
+            self.df_day=self.df_to_min10()
         elif self.radioButton_6.isChecked():
             self.df_day = self.df_to_min15()
         elif self.radioButton_7.isChecked():
@@ -178,17 +177,21 @@ class Ui_Main (QtWidgets.QMainWindow):
         
         #import UI execute
         #data_path = ui
-        readData = read_data()
-        read_data.importData(data_path)
+        df = read_data.readData()
+        #read_data.importData(data_path)
     
-    def plot(self, int):
+    #def plot(self):
         
         #select plot type
-        
-        plot_Timestamp = plot_timestamp(int)
+        #if self.radioButton_5.isChecked():
+        #    self.df_day=self.df_to_min10()
+        #plot_Timestamp = plot_timestamp(int)
         
         #switch or if elif
         #    call plot(plot_Timestamp)
+    
+    def generatePlot(self):
+        gen_plot()
     
                 
             
